@@ -15,7 +15,7 @@ class MockAddressInputViewModel: AddressInputViewModel {
     @Published var endSuggestions: [String] = []
     @Published var isValid: Bool = false
     
-    func didTapShowRoute(for locationPair: LocationPair) {
-        print("\(#function) - \(locationPair)")
+    func didTapShowRoute() {
+        print("\(#function)")
     }
 }

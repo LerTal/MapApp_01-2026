@@ -42,7 +42,7 @@ struct AddressInputView<ViewModel: AddressInputViewModel>: View {
                 textField_EndAddress()
 
                 Button("Show Route") {
-                    viewModel.didTapShowRoute(for: LocationPair.mock1)
+                    viewModel.didTapShowRoute()
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!viewModel.isValid)

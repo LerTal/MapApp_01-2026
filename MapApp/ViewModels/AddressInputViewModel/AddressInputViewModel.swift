@@ -16,5 +16,5 @@ protocol AddressInputViewModel: AnyObject, ObservableObject {
     var endSuggestions: [String] { get }
     var isValid: Bool { get }
     
-    func didTapShowRoute(for locationPair: LocationPair)
+    func didTapShowRoute()
 }

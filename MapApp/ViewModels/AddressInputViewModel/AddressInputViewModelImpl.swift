@@ -64,10 +64,17 @@ class AddressInputViewModelImpl: AddressInputViewModel {
             .receive(on: RunLoop.main)
             .assign(to: &$endSuggestions)
     }
-
-
     
-    func didTapShowRoute(for locationPair: LocationPair) {
-        coordinator.showRouteMap(locationPair)
+    func didTapShowRoute() {
+        Task {
+            do {
+                let geoStart = try await geocodingService.geocode(address: startAddress)
+                let geoEnd = try await geocodingService.geocode(address: endAddress)
+                let pair = LocationPair(startLocation: geoStart, endLocation: geoEnd)
+                coordinator.showRouteMap(pair)
+            } catch {
+                print("\(error)")
+            }
+        }
     }
 }
