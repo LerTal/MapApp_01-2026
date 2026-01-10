@@ -14,6 +14,8 @@ class AddressInputViewModelImpl: AddressInputViewModel {
     
     @Published var startAddress: String = ""
     @Published var endAddress: String = ""
+    @Published var startSuggestions: [String] = []
+    @Published var endSuggestions: [String] = []
     @Published var isValid: Bool = false
     
     init(coordinator: Coordinator, geocodingService: GeocodingService) {
@@ -23,11 +25,47 @@ class AddressInputViewModelImpl: AddressInputViewModel {
     }
     
     private func bind() {
-            Publishers.CombineLatest($startAddress, $endAddress)
-                .map { !$0.isEmpty && !$1.isEmpty }
-                .removeDuplicates()
-                .assign(to: &$isValid)
-        }
+        bindValidation()
+        bindStartAddressSuggestions()
+        bindEndAddressSuggestions()
+    }
+    
+    private func bindValidation() {
+        Publishers.CombineLatest($startAddress, $endAddress)
+            .map { !$0.isEmpty && !$1.isEmpty }
+            .removeDuplicates()
+            .assign(to: &$isValid)
+    }
+
+    private func bindStartAddressSuggestions() {
+        $startAddress
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .flatMap { [geocodingService] query -> AnyPublisher<[String], Never> in
+                guard query.count >= 3 else {
+                    return Just([]).eraseToAnyPublisher()
+                }
+                return geocodingService.suggestions(for: query)
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: &$startSuggestions)
+    }
+    
+    private func bindEndAddressSuggestions() {
+        $endAddress
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .flatMap { [geocodingService] query -> AnyPublisher<[String], Never> in
+                guard query.count >= 3 else {
+                    return Just([]).eraseToAnyPublisher()
+                }
+                return geocodingService.suggestions(for: query)
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: &$endSuggestions)
+    }
+
+
     
     func didTapShowRoute(for locationPair: LocationPair) {
         coordinator.showRouteMap(locationPair)

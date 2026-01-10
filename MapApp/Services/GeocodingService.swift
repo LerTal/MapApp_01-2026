@@ -6,6 +6,7 @@
 //
 
 import MapKit
+import Combine
 
 enum GeocodingError: Error {
     case locationNotFound
@@ -13,9 +14,19 @@ enum GeocodingError: Error {
 
 protocol GeocodingService {
     func geocode(address: String) async throws -> CLLocationCoordinate2D
+    func suggestions(for query: String) -> AnyPublisher<[String], Never>
 }
 
-final class MapKitGeocodingService: GeocodingService {
+final class MapKitGeocodingService: NSObject, GeocodingService {
+
+    private let completer = MKLocalSearchCompleter()
+    private let subject = PassthroughSubject<[String], Never>()
+
+    override init() {
+        super.init()
+        completer.delegate = self
+        completer.resultTypes = [.address]
+    }
 
     func geocode(address: String) async throws -> CLLocationCoordinate2D {
         let request = MKLocalSearch.Request()
@@ -30,5 +41,33 @@ final class MapKitGeocodingService: GeocodingService {
 
         return location.coordinate
     }
+
+    func suggestions(for query: String) -> AnyPublisher<[String], Never> {
+        guard !query.isEmpty else {
+            return Just([]).eraseToAnyPublisher()
+        }
+
+        completer.queryFragment = query
+
+        return subject
+            .eraseToAnyPublisher()
+    }
 }
 
+
+extension MapKitGeocodingService: MKLocalSearchCompleterDelegate {
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        let addresses = completer.results.map {
+            [$0.title, $0.subtitle]
+                .filter { !$0.isEmpty }
+                .joined(separator: ", ")
+        }
+
+        subject.send(addresses)
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        subject.send([])
+    }
+}

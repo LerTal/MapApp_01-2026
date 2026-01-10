@@ -12,6 +12,8 @@ import Combine
 protocol AddressInputViewModel: AnyObject, ObservableObject {
     var startAddress: String { get set }
     var endAddress: String { get set }
+    var startSuggestions: [String] { get }
+    var endSuggestions: [String] { get }
     var isValid: Bool { get }
     
     func didTapShowRoute(for locationPair: LocationPair)

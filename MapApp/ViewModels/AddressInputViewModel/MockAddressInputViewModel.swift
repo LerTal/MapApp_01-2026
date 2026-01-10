@@ -11,6 +11,8 @@ import Combine
 class MockAddressInputViewModel: AddressInputViewModel {
     @Published var startAddress: String = ""
     @Published var endAddress: String = ""
+    @Published var startSuggestions: [String] = []
+    @Published var endSuggestions: [String] = []
     @Published var isValid: Bool = false
     
     func didTapShowRoute(for locationPair: LocationPair) {
