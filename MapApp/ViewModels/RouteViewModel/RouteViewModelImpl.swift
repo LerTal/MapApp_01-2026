@@ -11,9 +11,9 @@ import Combine
 final class RouteViewModelImpl: RouteViewModel {
 
     // MARK: - Published state
-    @Published var route: MKRoute?
-    @Published var steps: [RouteStep] = []
-    @Published var isLoading = false
+    @Published private(set) var route: MKRoute?
+    @Published private(set) var steps: [RouteStep] = []
+    @Published private(set) var state: RouteViewState = .idle
 
     private let directionsService: DirectionsService
 
@@ -35,15 +35,15 @@ final class RouteViewModelImpl: RouteViewModel {
         from start: CLLocationCoordinate2D,
         to end: CLLocationCoordinate2D
     ) async {
-        isLoading = true
-        defer { isLoading = false }
+        state = .loading
 
         do {
             let route = try await directionsService.route(from: start, to: end)
             self.route = route
             self.steps = Self.mapSteps(route.steps)
+            state = .loaded
         } catch {
-            print("Route error:", error)
+            state = .failed(error.localizedDescription)
         }
     }
 

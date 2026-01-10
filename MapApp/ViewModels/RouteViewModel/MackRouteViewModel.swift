@@ -9,7 +9,7 @@ import MapKit
 import Combine
 
 class MackRouteViewModel: RouteViewModel {
+    @Published private(set) var state: RouteViewState = .idle
     @Published var route: MKRoute? = nil
     @Published var steps: [RouteStep] = []
-    @Published var isLoading: Bool = true
 }

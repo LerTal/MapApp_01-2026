@@ -8,6 +8,13 @@
 import MapKit
 import Combine
 
+enum RouteViewState: Equatable {
+    case idle
+    case loading
+    case loaded
+    case failed(String)
+}
+
 struct RouteStep: Identifiable {
     let id = UUID()
     let instruction: String
@@ -18,9 +25,9 @@ struct RouteStep: Identifiable {
 
 @MainActor
 protocol RouteViewModel: ObservableObject {
+    var state: RouteViewState { get }
     var route: MKRoute? { get }
     var steps: [RouteStep] { get }
-    var isLoading: Bool { get }
 }
 
 

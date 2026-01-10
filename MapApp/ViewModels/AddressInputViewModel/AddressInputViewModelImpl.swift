@@ -73,7 +73,7 @@ class AddressInputViewModelImpl: AddressInputViewModel {
                 let pair = LocationPair(startLocation: geoStart, endLocation: geoEnd)
                 coordinator.showRouteMap(pair)
             } catch {
-                print("\(error)")
+                print("---- \(error)")
             }
         }
     }
