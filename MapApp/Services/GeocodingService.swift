@@ -10,6 +10,7 @@ import Combine
 
 enum GeocodingError: Error {
     case locationNotFound
+    case invalidAddress
 }
 
 protocol GeocodingService {
@@ -29,17 +30,37 @@ final class MapKitGeocodingService: NSObject, GeocodingService {
     }
 
     func geocode(address: String) async throws -> CLLocationCoordinate2D {
+        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 3 else {
+            throw GeocodingError.invalidAddress
+        }
+
         let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = address
+        request.naturalLanguageQuery = trimmed
         request.resultTypes = .address
 
         let response = try await MKLocalSearch(request: request).start()
 
-        guard let location = response.mapItems.first?.location else {
+        guard let item = response.mapItems.first else {
             throw GeocodingError.locationNotFound
         }
 
-        return location.coordinate
+        if #available(iOS 26.0, *) {
+            guard item.address != nil else {
+                throw GeocodingError.locationNotFound
+            }
+            return item.location.coordinate
+        } else {
+            let placemark = item.placemark
+            guard
+                placemark.thoroughfare != nil ||
+                placemark.locality != nil ||
+                placemark.administrativeArea != nil
+            else {
+                throw GeocodingError.locationNotFound
+            }
+            return item.location.coordinate
+        }
     }
 
     func suggestions(for query: String) -> AnyPublisher<[String], Never> {
